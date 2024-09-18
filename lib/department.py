@@ -139,3 +139,18 @@ class Department:
 
         row = CURSOR.execute(sql, (name,)).fetchone()
         return cls.instance_from_db(row) if row else None
+    
+    def employees(self):
+
+        #return list of employees associated with current department.
+        from employee import Employee
+        sql = '''
+                SELECT * FROM employees WHERE department_id = ?
+                '''
+        CURSOR.execute(sql, (self.id,))
+
+        rows = CURSOR.fetchall()
+        employee_list = [
+            Employee.instance_from_db(row) for row in rows
+        ]
+        return ', '.join(str(employee) for employee in employee_list)

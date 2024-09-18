@@ -1,0 +1,90 @@
+Mapping Object relationships 
+Implementing ORM methods to manage a one-to-one relationship classes.
+
+lets assume that each employee workds for exactly one department.
+this relationship represents composisiton since an employee must be associated with a departmenpython-p3-v2-orm-relationships
+
+The one to many relationship between Department and Employee IS NOT IMPLEMENTED IN THE starter code.
+
+Objectives 
+    1. update the Employee class to add a new attribute to model the one-to-many reltionship.
+    2. Update the Employee class method to store and manage the realtionship in the employees database.
+    3. Update the Department class to add a new method to compute (not store) a list of associated Employee instances.
+
+MAPPING A ONE-TO-MANY RELATIONSHIP.
+the concept of single source of truth states that we should design our software and data to avoid redundancy.
+in terms of relational databse design, we weant to store the relationship between two entitites in just one place within the databse.
+we do this to avoid issues that often arise when redundant data is not updated in a consistent manner.
+
+When we have a relationship bwteen two classes, we need to figure out where to store the relationship.
+for the one-to-many relationship, the class(or entity) on the mayny side is the owner of the relationship and is responsible for storing the relationship.
+why? beside each object on the mant side is related to just one entity on the one side thus each emloyee only need to store
+ a single value to maintain the relationship with its department.the entity on the many side stores the relationship with a foreign key.
+
+ Employees is on the many side of the relationship, thus it owns and manages the relationship by storing a single piece of data about he Department.
+    1. The Employee class with have an attribute department_id to reference the is of the associtated Department Object.
+
+    2. the employess table will contain a column department_id to store a foreign key reference to the departments table.
+
+Department is on the one side relationship this it should not store a list of the associated Employee INSTANCES.
+Instead, a list of the many Employees objects associated with the department will be computed by looking at the department_id foreign key value storeswith each employee
+
+
+UPDATING THE EMPLOYEE CALSS TO STORE THE RELATIONSHIP.
+Updating the employee class to store the relationship to department by making the following changes
+
+    1. Import the Department class
+    2. Update the __init__ method to add a parameter department_id and store 
+    the value in a new attribute with the same name.
+    3. update the __repr__ method to inlcude the value of the new attribute
+
+    4.Updating the create_table method to add a column anmes department_id pt store the raltionship as a foreign key in the employees table.
+    this is done as follows:
+        @classmethod
+def create_table(cls):
+    """ Create a new table to persist the attributes of Employee instances """
+    sql = """
+        CREATE TABLE IF NOT EXISTS employees (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        job_title TEXT,
+        department_id INTEGER,
+        FOREIGN KEY (department_id) REFERENCES departments(id))
+    """
+    CURSOR.execute(sql)
+    CONN.commit()
+
+    5. adapt the save, update and create methods to persist the new relationship by storing the department id in the employees table.
+    6. And the final change to the Employee class is to update the instance_from_db method to inlcude the department id from the table row.
+
+
+UPDATING THE DEPARMENT CLASS TO COMPUTE ASSOCIATE EMPLOYEE INSTANCES.
+since the Deparment class is not the one owning the relationship, we wont store anything about employess in the departments table. 
+but we might want to get a list of all wmployees that works for a department.
+well ass a method to the department class that accomplishes this task.
+
+    1. query the employees table for rows that contain foreign keys value that matches the current deparments id.
+    2. map the row data to an Employee instance.
+
+Note that we import the Employee class within the function defination to issues with circular imports (since employees class imports the department class as well.)
+This is done as follows:
+
+    def employees(self):
+        #return list of employees associated with current department.
+        from employee import Employee
+        sql = '''
+                SELECT * FROM employees WHERE department_id = ?'''
+        CURSOR.execute(self, (self.id,))
+        rows = CURSOR.fetchall()
+        return[
+            Employee.instance_from_db(row) for row in rows
+        ]
+
+
+EXPLORING THE ONE-TO-MANY RELATIONSHIP.
+The file lib.debug.py has been updated to initliaze the database with two separtments ad several eomployees.
+the code generated fake names for the employees and picks a random job title and department for each employee.
+
+learned how to persist a one-to-many relationship betweenc classes.
+The class or enetity on the many side of the relationship is responsible for sotirng and mainitaining the relationship,
+ since it only need to store a single value to reference teh associated object/entity on the one side.
